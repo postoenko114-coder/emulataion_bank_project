@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    --primary: #5f27cd;
+    --primary-hover: #481fa0;
+    --text-dark: #222f3e;
+    --text-muted: #8395a7;
+    --bg-body: #f7f9fc;
+    --radius-lg: 16px;
+}
+
+body {
+    background-color: var(--bg-body);
+    font-family: 'Inter', sans-serif;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+}
+
+/* Карточка */
+.auth-card {
+    background: white;
+    padding: 40px;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    width: 100%;
+    max-width: 420px;
+    border: 1px solid rgba(0,0,0,0.02);
+}
+
+/* Логотип */
+.brand-logo {
+    color: var(--primary);
+    font-weight: 800;
+    font-size: 1.8rem;
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    letter-spacing: -0.5px;
+}
+.brand-logo:hover { color: var(--primary-hover); }
+
+/* Заголовки */
+.auth-title {
+    font-weight: 700;
+    color: var(--text-dark);
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+/* Инпуты */
+.form-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.form-control {
+    padding: 12px 15px;
+    border-radius: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.form-control:focus {
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(95, 39, 205, 0.1);
+    border-color: var(--primary);
+}
+
+/* Кнопки */
+.btn-primary-custom {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 600;
+    width: 100%;
+    transition: all 0.2s;
+}
+
+.btn-primary-custom:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(95, 39, 205, 0.2);
+    color: white;
+}
+
+/* Google Button */
+.btn-google {
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    color: var(--text-dark);
+    font-weight: 600;
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.btn-google:hover {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    color: var(--text-dark);
+}
+
+/* Ссылки */
+.link-primary {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+.link-primary:hover { color: var(--primary-hover); }

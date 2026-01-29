@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Branches - MyBank</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+        <a class="navbar-brand" href="index.html"><i class="fa-solid fa-wallet me-2"></i>MyBank</a>
+        <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+        <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+            <ul class="navbar-nav align-items-center">
+                <li class="nav-item"><a class="nav-link" href="services.html">Services</a></li>
+                <li class="nav-item"><a class="nav-link active" href="branches.html">Branches</a></li>
+                <li class="nav-item"><a class="nav-link fw-bold text-primary" href="#" data-bs-toggle="modal" data-bs-target="#calculatorModal">Loan Calculator</a></li>
+            </ul>
+        </div>
+        <div class="d-flex" id="auth-buttons"><a href="login.html" class="btn btn-primary-custom">Sign In / Join</a></div>
+    </div>
+</nav>
+
+<header class="page-header mt-5">
+    <div class="container">
+        <h1 class="fw-bold display-5">Our Branches</h1>
+        <p class="lead opacity-75">Find the nearest location to you</p>
+    </div>
+</header>
+
+<div class="container mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="input-group shadow rounded-pill overflow-hidden bg-white p-1">
+                <input type="text" id="branch-search" class="form-control border-0 ps-4 shadow-none" placeholder="City or Street name...">
+
+                <button class="btn btn-white text-primary border-end" onclick="findNearestBranches()" title="Find near me">
+                    <i class="fa-solid fa-location-crosshairs"></i>
+                </button>
+
+                <button class="btn btn-primary-custom rounded-pill m-1 px-4" onclick="loadBranches()">Find</button>
+            </div>
+            <div class="text-center mt-2" style="height: 20px;">
+                <small id="geo-status"></small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="container py-4 mb-5 flex-grow-1">
+    <div class="row g-4" id="branches-container">
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="branchDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="modal-branch-name">Branch Name</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex align-items-center mb-4 text-primary bg-light p-3 rounded">
+                    <i class="fa-solid fa-map-location-dot fa-2x me-3"></i>
+                    <div>
+                        <small class="text-muted fw-bold d-block" style="font-size: 0.7rem;">ADDRESS</small>
+                        <span id="modal-branch-addr" class="fw-bold text-dark">Address line</span>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-3 pb-2 border-bottom">Opening Hours</h6>
+                <div id="modal-branch-schedule"></div>
+            </div>
+
+            <div class="modal-footer border-0 p-4 pt-0">
+                <a id="btn-google-maps" href="#" target="_blank" class="btn btn-outline-primary w-100 fw-bold">
+                    <i class="fa-solid fa-map-location text-primary me-2"></i>Show on Google Maps
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="calculatorModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Loan Calculator</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label small text-muted fw-bold">LOAN AMOUNT</label>
+                    <input type="number" id="calc-amount" class="form-control form-control-custom" value="50000" oninput="calculateLoan()">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small text-muted fw-bold">TERM</label>
+                    <input type="range" id="calc-term" class="form-range" min="6" max="60" step="6" value="12" oninput="updateTermLabel(this.value)">
+                    <div class="text-center fw-bold text-primary mt-1" id="term-label">12 Months</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small text-muted fw-bold">INTEREST RATE (%)</label>
+                    <input type="number" id="calc-rate" class="form-control form-control-custom" value="15" oninput="calculateLoan()">
+                </div>
+                <hr class="my-4">
+                <div class="text-center">
+                    <h6 class="text-muted small text-uppercase fw-bold">Monthly Payment</h6>
+                    <h2 class="fw-bold text-primary display-6" id="calc-result">0.00</h2>
+                    <small class="text-muted">Total Payment: <span id="calc-total">0.00</span></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

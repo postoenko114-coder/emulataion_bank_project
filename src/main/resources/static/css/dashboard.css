@@ -1,0 +1,318 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* =========================================
+   1. VARIABLES & RESET
+   ========================================= */
+:root {
+    /* Brand Colors (Matched with Landing) */
+    --primary: #5f27cd;
+    --primary-hover: #481fa0;
+    --primary-light: #e0dcf5;
+
+    --secondary: #222f3e;
+    --text-main: #222f3e;
+    --text-muted: #8395a7;
+
+    /* Backgrounds */
+    --bg-body: #f7f9fc;
+    --bg-card: #ffffff;
+    --bg-input: #f1f2f6;
+
+    /* Dimensions & Shadows */
+    --sidebar-w: 260px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+    --shadow-primary: 0 8px 20px rgba(95, 39, 205, 0.25);
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    margin: 0;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+a { text-decoration: none; }
+
+/* =========================================
+   2. SIDEBAR
+   ========================================= */
+.sidebar {
+    width: var(--sidebar-w);
+    background-color: var(--bg-card);
+    position: fixed;
+    top: 0; bottom: 0; left: 0;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    box-shadow: var(--shadow-sm);
+    border-right: 1px solid rgba(0,0,0,0.02);
+}
+
+.brand-logo {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 40px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: -0.5px;
+}
+
+.nav-section-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin: 25px 0 10px 15px;
+    letter-spacing: 1px;
+}
+
+.nav-item {
+    padding: 12px 15px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    border-radius: var(--radius-md);
+    margin-bottom: 5px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.nav-item i { width: 24px; margin-right: 10px; font-size: 1.1rem; text-align: center; }
+
+.nav-item:hover {
+    background-color: var(--bg-input);
+    color: var(--primary);
+}
+
+.nav-item.active {
+    background-color: var(--primary-light);
+    color: var(--primary);
+    font-weight: 700;
+}
+
+/* =========================================
+   3. MAIN CONTENT
+   ========================================= */
+.main-content {
+    margin-left: var(--sidebar-w);
+    padding: 40px;
+    min-height: 100vh;
+}
+
+.page-header-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 35px;
+}
+
+/* Styled decorative bar like the brand color */
+.header-bar {
+    width: 4px;
+    height: 32px;
+    background-color: var(--primary);
+    margin-right: 15px;
+    border-radius: 4px;
+}
+
+.page-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 0;
+    line-height: 1.2;
+}
+
+/* =========================================
+   4. CARDS & UI ELEMENTS
+   ========================================= */
+.info-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 25px;
+    box-shadow: var(--shadow-sm);
+    border: none;
+    height: 100%;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.clickable-card {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.clickable-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+.card-value {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 5px;
+    color: var(--text-main);
+    letter-spacing: -1px;
+}
+
+.card-label {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* =========================================
+   5. FORMS & BUTTONS
+   ========================================= */
+.form-label-custom {
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+.form-control-custom, .form-select-custom {
+    background-color: var(--bg-input);
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 12px 15px;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    transition: all 0.2s;
+}
+
+.form-control-custom:focus, .form-select-custom:focus {
+    background-color: #fff;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(95, 39, 205, 0.1);
+    outline: none;
+}
+
+.btn-primary {
+    background-color: var(--primary) !important;
+    border: none !important;
+    padding: 12px 24px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    box-shadow: var(--shadow-primary);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(95, 39, 205, 0.35);
+}
+
+/* =========================================
+   6. BANK CARDS (VISUAL)
+   ========================================= */
+.bank-card-visual {
+    background: linear-gradient(135deg, var(--primary) 0%, #a55eea 100%);
+    color: #fff;
+    border-radius: 20px;
+    padding: 25px;
+    position: relative;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: var(--shadow-primary);
+    overflow: hidden;
+    transition: transform 0.3s;
+    cursor: pointer;
+}
+
+.bank-card-visual:hover { transform: translateY(-5px); }
+/* Specific states handled in JS via inline styles mostly, but defaults here */
+.bank-card-visual.bg-closed { background: #636e72; box-shadow: none; opacity: 0.8; }
+
+/* =========================================
+   7. TABLES & LISTS
+   ========================================= */
+.table-custom {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+.table-custom tr td {
+    background: #fff;
+    padding: 20px;
+    vertical-align: middle;
+    border: none;
+    box-shadow: var(--shadow-sm);
+}
+
+.table-custom tr td:first-child { border-radius: 12px 0 0 12px; }
+.table-custom tr td:last-child { border-radius: 0 12px 12px 0; }
+
+.table-hover tbody tr:hover td {
+    background-color: #fcfcfc;
+    transform: scale(1.005);
+    transition: 0.2s;
+}
+
+/* =========================================
+   8. MISC
+   ========================================= */
+.nav-pills .nav-link {
+    color: var(--text-muted);
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    padding: 10px 20px;
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--primary) !important;
+    color: white !important;
+    box-shadow: var(--shadow-primary);
+}
+
+.floating-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 56px;
+    height: 56px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: var(--shadow-primary);
+    cursor: pointer;
+    z-index: 2000;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.floating-btn:hover {
+    transform: scale(1.1);
+    background: var(--primary-hover);
+}
+
+/* Modal Polish */
+.modal-content {
+    border: none;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+.modal-header { border-bottom: 1px solid #f1f2f6; }
+.modal-footer { border-top: none; }

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyBank Dashboard</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+
+    <nav class="sidebar">
+        <a href="/" class="brand-logo">
+            <i class="fa-solid fa-wallet me-2"></i>MyBank
+        </a>
+
+        <div class="d-flex flex-column h-100">
+            <div class="nav-section-title">Menu</div>
+
+            <a onclick="loadPage('accounts', this)" class="nav-item active">
+                <i class="fa-solid fa-wallet"></i> Accounts
+            </a>
+            <a onclick="loadPage('transfer', this)" class="nav-item">
+                <i class="fa-solid fa-money-bill-transfer"></i> Make Transfer
+            </a>
+            <a onclick="loadPage('cards', this)" class="nav-item">
+                <i class="fa-regular fa-credit-card"></i> My Cards
+            </a>
+            <a onclick="loadPage('transactions', this)" class="nav-item">
+                <i class="fa-solid fa-list-ul"></i> History
+            </a>
+            <a onclick="loadPage('reservations', this)" class="nav-item">
+                <i class="fa-regular fa-calendar-check"></i> Reservations
+            </a>
+            <a onclick="loadPage('notifications', this)" class="nav-item">
+                <i class="fa-regular fa-bell"></i> Notifications
+            </a>
+
+            <div class="mt-auto">
+                <div class="nav-section-title">Settings</div>
+                <a onclick="loadPage('profile', this)" class="nav-item">
+                    <i class="fa-solid fa-gear"></i> Profile
+                </a>
+                <a onclick="logout()" class="nav-item text-danger">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="page-header-wrapper">
+            <div class="d-flex align-items-center">
+                <div class="header-bar"></div>
+                <h2 class="page-title" id="page-title">Accounts Overview</h2>
+            </div>
+
+            <div class="ms-auto d-flex align-items-center gap-4">
+                <div class="position-relative" onclick="loadPage('notifications', null)" style="cursor: pointer;">
+                    <i class="fa-regular fa-bell fa-lg text-muted"></i>
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    <div class="text-end d-none d-md-block" style="line-height: 1.2;">
+                        <div class="fw-bold text-dark" style="font-size: 0.95rem;" id="user-name-display">Loading...</div>
+                        <div class="text-muted small" style="font-size: 0.75rem;">Client</div>
+                    </div>
+                    <div id="user-avatar-container"
+                         class="rounded-circle bg-dark text-white d-flex justify-content-center align-items-center shadow-sm"
+                         style="width: 45px; height: 45px; overflow: hidden; font-size: 1.2rem;">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="transaction-filters" class="mb-4 p-4 info-card d-none">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label-custom">Filter By</label>
+                    <select id="filter-type" class="form-select form-select-custom" onchange="toggleFilterInputs()">
+                        <option value="ALL">Show All</option>
+                        <option value="DATE">Specific Date</option>
+                        <option value="AFTER">After Date</option>
+                        <option value="BEFORE">Before Date</option>
+                        <option value="AMOUNT">Exact Amount</option>
+                        <option value="ACCOUNT">By Account</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4 filter-input d-none" id="input-date-group">
+                    <label class="form-label-custom">Date</label>
+                    <input type="date" id="filter-date" class="form-control form-control-custom">
+                </div>
+
+                <div class="col-md-4 filter-input d-none" id="input-amount-group">
+                    <label class="form-label-custom">Amount</label>
+                    <input type="number" id="filter-amount" class="form-control form-control-custom" placeholder="0.00">
+                </div>
+
+                <div class="col-md-4 filter-input d-none" id="input-account-group">
+                    <label class="form-label-custom">Select Account</label>
+                    <select id="filter-account" class="form-select form-select-custom"></select>
+                </div>
+
+                <div class="col-md-2 ms-auto">
+                    <button class="btn btn-primary w-100" onclick="applyFilters()">Apply</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="content-area" class="row g-4">
+            <div class="col-12 text-center mt-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-3 text-muted fw-medium">Loading data...</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div class="modal fade" id="addAccountModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Open New Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label-custom">Select Currency</label>
+                <select id="new-acc-currency" class="form-select form-select-custom">
+                    <option value="USD">USD 🇺🇸</option>
+                    <option value="EUR">EUR 🇪🇺</option>
+                    <option value="CZK">CZK 🇨🇿</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary w-100" onclick="createAccount()">Open Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addCardModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Order New Card</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label-custom">Link to Account</label>
+                    <select id="new-card-account" class="form-select form-select-custom"></select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label-custom">Card Type</label>
+                    <select id="new-card-type" class="form-select form-select-custom">
+                        <option value="DEBIT">Debit</option>
+                        <option value="CREDIT">Credit</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary w-100" onclick="createCard()">Order Card</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="accountDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Account Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center pt-0">
+                <h1 class="display-4 fw-bold my-3 text-dark" id="modal-acc-balance">0.00</h1>
+                <span class="badge bg-primary fs-6 mb-4 px-3 py-2 rounded-pill" id="modal-acc-currency">USD</span>
+                <input type="hidden" id="modal-acc-id">
+
+                <div class="bg-light p-4 rounded-4 text-start mt-2">
+                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Number</span><span class="fw-bold font-monospace" id="modal-acc-number">...</span></div>
+                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Status</span><span class="fw-bold" id="modal-acc-status">...</span></div>
+                    <div class="d-flex justify-content-between"><span class="text-muted">Created</span><span class="fw-bold" id="modal-acc-date">...</span></div>
+                </div>
+                <div class="modal-footer border-0 d-flex gap-2 mt-2">
+                    <button class="btn btn-outline-danger flex-grow-1 fw-bold" onclick="closeAccount()">Close Account</button>
+                    <button class="btn btn-primary flex-grow-1" data-bs-dismiss="modal" onclick="loadPage('transfer', null)">Transfer Money</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cardDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Card Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-3 p-4 text-white rounded-4 shadow-sm"
+                     style="background: linear-gradient(135deg, #5f27cd 0%, #a55eea 100%); text-align: left;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <span class="opacity-75 fw-bold">MyBank</span>
+                        <i class="fa-brands fa-cc-visa fa-2x"></i>
+                    </div>
+                    <div class="fs-4" style="font-family: monospace; letter-spacing: 2px;" id="modal-card-number">**** **** **** 0000</div>
+                </div>
+                <input type="hidden" id="modal-card-id">
+
+                <div class="bg-light p-4 rounded-4 text-start">
+                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Holder</span><span class="fw-bold" id="modal-card-holder">...</span></div>
+                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Expires</span><span class="fw-bold" id="modal-card-expiry">...</span></div>
+                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Type</span><span class="fw-bold" id="modal-card-type">...</span></div>
+                    <div class="d-flex justify-content-between"><span class="text-muted">Status</span><span class="fw-bold" id="modal-card-status">...</span></div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-outline-danger w-100 fw-bold" onclick="closeCard()">Close Card</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="transactionDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Transaction Receipt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold text-dark" id="modal-tx-amount">0.00</h2>
+                    <span class="badge bg-light text-dark border px-3 py-2" id="modal-tx-type">TYPE</span>
+                </div>
+                <input type="hidden" id="modal-tx-id">
+
+                <div class="bg-light p-4 rounded-4">
+                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Date</span><span class="fw-bold" id="modal-tx-date">...</span></div>
+                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Description</span><span class="fw-bold" id="modal-tx-desc">...</span></div>
+                    <hr class="my-3 text-muted opacity-25">
+                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">From</span><span class="fw-bold small font-monospace" id="modal-tx-from">...</span></div>
+                    <div class="d-flex justify-content-between"><span class="text-muted">To</span><span class="fw-bold small font-monospace" id="modal-tx-to">...</span></div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-light text-muted w-100 fw-medium" onclick="hideTransaction()">
+                    <i class="fa-regular fa-eye-slash me-2"></i>Hide from history
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="notificationDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Notification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                        <i class="fa-solid fa-bell text-primary fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 fw-bold text-dark" id="modal-notif-type">Type</h6>
+                        <small class="text-muted" id="modal-notif-date">Date</small>
+                    </div>
+                </div>
+                <p class="bg-light p-4 rounded-4 text-secondary" id="modal-notif-msg">Message content...</p>
+
+                <input type="hidden" id="modal-notif-id">
+            </div>
+            <div class="modal-footer border-0 d-flex gap-2">
+                <button class="btn btn-outline-secondary flex-grow-1" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-danger flex-grow-1 fw-bold" onclick="deleteCurrentNotification()">
+                    <i class="fa-solid fa-trash me-2"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Change Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="password" id="cp-old" class="form-control form-control-custom mb-3" placeholder="Old Password">
+                <input type="password" id="cp-new" class="form-control form-control-custom" placeholder="New Password">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary w-100" onclick="changePassword()">Save New Password</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addReservationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Book a Visit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="resForm">
+                    <div class="mb-3">
+                        <label class="form-label-custom">Select Branch</label>
+                        <select id="res-branch" class="form-select form-select-custom">
+                            <option selected disabled>Loading branches...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-custom">Select Service</label>
+                        <select id="res-service" class="form-select form-select-custom">
+                            <option selected disabled>Loading services...</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label-custom">Date</label>
+                            <input type="date" id="res-date" class="form-control form-control-custom">
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label-custom">Time</label>
+                            <input type="time" id="res-time" class="form-control form-control-custom" min="09:00" max="18:00">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary w-100" onclick="createReservation()">Confirm Booking</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="supportModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Support Chat</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="supportForm">
+                    <div class="mb-3">
+                        <label class="form-label-custom">Your Email</label>
+                        <input type="email" id="supp-email" class="form-control form-control-custom" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-custom">Subject</label>
+                        <select id="supp-subject" class="form-select form-select-custom">
+                            <option>Technical Issue</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-custom">Message</label>
+                        <textarea id="supp-msg" class="form-control form-control-custom" rows="4"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary w-100" onclick="sendDashboardSupport()">Send Message</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="floating-btn" title="Contact Support" data-bs-toggle="modal" data-bs-target="#supportModal">
+    <i class="fa-solid fa-headset fa-xl"></i>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/dashboard.js"></script>
+
+</body>
+</html>
