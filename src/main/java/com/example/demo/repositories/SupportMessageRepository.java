@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,8 +17,8 @@ public interface SupportMessageRepository extends JpaRepository<SupportMessage, 
     Optional<SupportMessage> findSupportMessageById(Long id);
 
     @Query("SELECT m FROM SupportMessage m WHERE " +
-            "(:email IS NULL OR m.userEmail LIKE %:email%) AND " +
-            "(:date IS NULL OR CAST(m.createdAt AS LocalDate) = :date) " +
-            "ORDER BY m.createdAt DESC")
-    List<SupportMessage> search(@Param("email") String email, @Param("date") LocalDate date);
+            "(:email IS NULL OR UPPER(m.userEmail) LIKE UPPER(CONCAT('%', :email, '%'))) AND " +
+            "(CAST(:startOfDay as timestamp) IS NULL OR m.createdAt >= :startOfDay) AND " +
+            "(CAST(:endOfDay as timestamp) IS NULL OR m.createdAt <= :endOfDay)")
+    List<SupportMessage> search(@Param("email") String email, @Param("startOfDay") LocalDateTime startOfDay, @Param("endOfDay") LocalDateTime endOfDay);
 }

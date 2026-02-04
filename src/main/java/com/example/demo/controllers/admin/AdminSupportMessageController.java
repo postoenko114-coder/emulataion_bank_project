@@ -9,7 +9,6 @@ import com.example.demo.services.notification.NotificationService;
 import com.example.demo.services.supportMessage.SupportMessageService;
 import com.example.demo.services.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +26,7 @@ public class AdminSupportMessageController {
     private NotificationService notificationService;
     @Autowired
     private EmailService emailService;
+
 
     public AdminSupportMessageController(SupportMessageService supportMessageService, UserService userService, NotificationService notificationService, EmailService emailService) {
         this.supportMessageService = supportMessageService;
@@ -47,7 +47,7 @@ public class AdminSupportMessageController {
 
     @GetMapping("/search")
     public List<SupportDTO> search(@RequestParam(required = false) String email,
-                                   @RequestParam(required = false) @DateTimeFormat(pattern = "dd.MM.yyyy") LocalDate date) {
+                                   @RequestParam(required = false) LocalDate date) {
         return supportMessageService.search(email, date);
     }
 
@@ -60,11 +60,10 @@ public class AdminSupportMessageController {
             return ResponseEntity.badRequest().body("No email found in the support message");
         }
 
-        User user = userService.findUserByEmail(targetEmail);
-
         String replyText = "RE: Support Request (ID: " + supportMessageId + ")\n\n" + replyDTO.getReplyText();
 
-        if (user != null) {
+        if (userService.checkEmail(targetEmail)) {
+            User user = userService.findUserByEmail(targetEmail);
             notificationService.sendNotificationToClient(user, notificationService.createNotification(user, TypeNotification.SUPPORT, replyText));
             return ResponseEntity.ok("User found. Reply sent to Dashboard Notifications.");
         } else {

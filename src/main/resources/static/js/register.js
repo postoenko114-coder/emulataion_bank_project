@@ -32,6 +32,9 @@ async function handleRegister(event) {
             sessionStorage.setItem('accessToken', data.token);
             window.location.href = 'dashboard.html';
         } else {
+            if(response.status === 409){
+                alert("Error: user with this email already exists!");
+            }
             const err = await response.json();
             alert("Registration failed: " + (err.message || "Something went wrong"));
         }

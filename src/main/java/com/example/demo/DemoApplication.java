@@ -48,16 +48,21 @@ public class DemoApplication {
 
             Location location = new Location("Prague", "Street 1" , "Czech Republic", 50.075, 14.437 , "11111");
 
-            BankBranch bankBranch =  new BankBranch("Branch 1", location);
-            bankBranch.setSchedule(getClassicSchedule());
-            bankBranchRepository.save(bankBranch);
-
             BankService bankService = new BankService("Lending", "30 minutes", "Lending consultation");
+            bankServiceRepository.save(bankService);
+            BankBranch bankBranch =  new BankBranch("Branch 1", location);
+
             Set<BankService> bankServices = new HashSet<>();
             bankServices.add(bankService);
             bankBranch.setServices(bankServices);
-            bankServiceRepository.save(bankService);
+            bankBranch.setSchedule(getClassicSchedule());
 
+            Set<BankBranch> bankBranches = new HashSet<>();
+            bankBranches.add(bankBranch);
+            bankService.setBankBranches(bankBranches);
+
+            bankBranchRepository.save(bankBranch);
+            bankServiceRepository.save(bankService);
 
         };
     }

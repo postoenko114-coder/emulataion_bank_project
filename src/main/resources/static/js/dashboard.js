@@ -95,10 +95,8 @@ function loadPage(pageName, element) {
     const container = document.getElementById('content-area');
     const filterPanel = document.getElementById('transaction-filters');
 
-    // Show loading spinner
     container.innerHTML = '<div class="col-12 text-center mt-5"><div class="spinner-border text-primary"></div></div>';
 
-    // Handle Filters visibility
     if (filterPanel) {
         if (pageName === 'transactions') filterPanel.classList.remove('d-none');
         else filterPanel.classList.add('d-none');
@@ -509,7 +507,6 @@ function switchOperation(type) {
     const btnAction = document.getElementById('btn-action');
     const title = document.getElementById('op-title');
 
-    // UI State Management
     const states = {
         'TRANSFER': { tab: 'tab-transfer', recipient: true, desc: true, label: 'From Account', title: 'Transfer Money', btn: 'Send Money <i class="fa-regular fa-paper-plane ms-2"></i>' },
         'DEPOSIT': { tab: 'tab-deposit', recipient: false, desc: false, label: 'Target Account', title: 'Deposit Funds', btn: 'Deposit <i class="fa-solid fa-arrow-down ms-2"></i>' },
@@ -775,10 +772,8 @@ async function openNotificationDetails(index) {
     const n = window.userNotifications[index];
     if (!n) return;
 
-    // 1. Сохраняем ID уведомления в скрытое поле модалки
     document.getElementById('modal-notif-id').value = n.id;
 
-    // ЛОГИКА ПРОЧТЕНИЯ (Остается без изменений)
     if (n.id && n.statusNotification !== 'READ') {
         const navItem = document.querySelector("a[onclick*='notifications']");
         const menuBadge = navItem ? navItem.querySelector('.badge') : null;
@@ -807,7 +802,6 @@ async function openNotificationDetails(index) {
         } catch (e) { console.error("Error syncing read status:", e); }
     }
 
-    // ЗАПОЛНЕНИЕ МОДАЛКИ
     document.getElementById('modal-notif-type').textContent = n.typeNotification;
     document.getElementById('modal-notif-date').textContent = formatDate(n.createdAt);
     const formattedMessage = n.message ? n.message.replace(/\n/g, '<br>') : '';
@@ -976,6 +970,11 @@ async function loadProfile() {
         if (!response) return;
         const user = await response.json();
         const container = document.getElementById('content-area');
+
+        const changePassButton = user.hasPassword
+            ? `<button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">Change Password</button>`
+            : `<button class="btn btn-outline-secondary" onclick="alert('You are signed in via Google. Please manage your password through your provider settings.')">Change Password</button>`;
+
         container.innerHTML = `
             <div class="col-md-8 offset-md-2 col-lg-6 offset-lg-3">
                 <div class="info-card">
@@ -991,16 +990,46 @@ async function loadProfile() {
                     </div>
                     <div class="mb-3">
                         <label class="form-label-custom">Email</label>
-                        <input type="text" id="edit-email" class="form-control form-control-custom" value="${user.email}">
+                        <input type="text" id="edit-email" class="form-control form-control-custom" value="${user.email}" ${!user.hasPassword ? 'disabled' : ''}>
                     </div>
+                    
                     <div class="d-flex gap-2 mt-4">
                          <button class="btn btn-primary flex-grow-1" onclick="updateProfile()">Save Changes</button>
-                         <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">Change Password</button>
-                    </div>
+                         ${changePassButton} </div>
+                    
                     <hr class="my-4">
                     <button class="btn btn-outline-danger w-100 fw-bold" onclick="logout()">
                         <i class="fa-solid fa-arrow-right-from-bracket me-2"></i>Sign Out
                     </button>
+                </div>
+            </div>
+
+            <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Change Password</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Old Password</label>
+                                <input type="password" id="cp-old-pass" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">New Password</label>
+                                <input type="password" id="cp-new-pass" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Confirm New Password</label>
+                                <input type="password" id="cp-confirm-pass" class="form-control">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="submitChangePassword()">Update Password</button>
+                        </div>
+                    </div>
                 </div>
             </div>`;
     } catch (e) {
@@ -1014,7 +1043,58 @@ async function updateProfile() {
     try {
         const response = await authFetch(`${API_BASE}/users/${currentUserId}`, { method: 'PUT', body: JSON.stringify({ username, email }) });
         if (response && response.ok) { alert('Updated!'); loadUserInfo(); } else { alert('Error'); }
-    } catch (e) { alert('Error'); }
+    } catch (e) { alert('Do something!'); }
+}
+
+async function submitChangePassword() {
+    const oldPassInput = document.getElementById('cp-old-pass');
+    const newPassInput = document.getElementById('cp-new-pass');
+    const confirmPassInput = document.getElementById('cp-confirm-pass');
+    const oldPass = oldPassInput.value;
+    const newPass = newPassInput.value;
+    const confirmPass = confirmPassInput.value;
+
+    if (!oldPass || !newPass || !confirmPass) {
+        alert("Please fill in all password fields.");
+        return;
+    }
+    if (newPass !== confirmPass) {
+        alert("New passwords do not match!");
+        return;
+    }
+    try {
+        const params = new URLSearchParams({
+            oldPassword: oldPass,
+            newPassword: newPass
+        });
+        const response = await authFetch(
+            `${API_BASE}/users/${currentUserId}/changePassword?${params.toString()}`,
+            {
+                method: 'PUT'
+            }
+        );
+
+        if (response.ok) {
+            alert("Password successfully changed!");
+
+            const modalElement = document.getElementById('changePasswordModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+
+            oldPassInput.value = '';
+            newPassInput.value = '';
+            confirmPassInput.value = '';
+        } else {
+            const errorMsg = await response.text().catch(() => "Unknown error");
+            alert("Failed to change password: " + errorMsg);
+        }
+
+    } catch (e) {
+        console.error(e);
+        alert("Failed to change password. Please try again later.");
+    }
 }
 
 async function sendDashboardSupport() {

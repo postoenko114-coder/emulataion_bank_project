@@ -41,4 +41,8 @@ public class UserDTO {
     public String getPassword() {return password;}
 
     public void setPassword(String password) {this.password = password;}
+
+    public boolean isHasPassword() {
+        return this.password != null && !this.password.isEmpty();
+    }
 }

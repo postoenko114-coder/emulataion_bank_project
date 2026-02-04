@@ -5,11 +5,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     checkAuth();
     loadExchangeRates();
 
-    // Загрузка контента в зависимости от страницы
     if (document.getElementById('services-container')) loadServices();
     if (document.getElementById('branches-container')) loadBranches();
 
-    // Инициализация калькулятора, если он есть
     const rateInput = document.getElementById('calc-rate');
     if (rateInput) {
         rateInput.addEventListener('input', calculateLoan);
@@ -140,7 +138,7 @@ async function loadBranches() {
     const container = document.getElementById('branches-container');
     if (!container) return;
 
-    showStatus('', ''); // Clear status
+    showStatus('', '');
     const query = document.getElementById('branch-search')?.value || '';
 
     let url = `${API_BASE}/branches`;
@@ -193,7 +191,31 @@ function openBranchDetails(id) {
     if (!branch) return;
 
     document.getElementById('modal-branch-name').textContent = branch.bankBranchName;
-    document.getElementById('modal-branch-addr').textContent = `${branch.locationDTO.address}, ${branch.locationDTO.city}`;
+
+    const addrText = branch.locationDTO
+        ? `${branch.locationDTO.address}, ${branch.locationDTO.city}`
+        : "Address not available";
+    document.getElementById('modal-branch-addr').textContent = addrText;
+
+    const servicesContainer = document.getElementById('modal-branch-services');
+    servicesContainer.innerHTML = '';
+
+    if (branch.bankServices && branch.bankServices.length > 0) {
+        branch.bankServices.forEach(service => {
+            const serviceName = (typeof service === 'object') ? service.bankServiceName : service;
+
+            const badge = `
+                <div class="d-inline-flex align-items-center px-3 py-2" 
+                     style="background-color: #f1f2f6; color: var(--primary); border-radius: 50px; font-weight: 600; font-size: 0.85rem;">
+                    <i class="fa-solid fa-check-circle me-2" style="opacity: 0.7;"></i>
+                    ${serviceName}
+                </div>
+            `;
+            servicesContainer.innerHTML += badge;
+        });
+    } else {
+        servicesContainer.innerHTML = `<span style="color: var(--text-muted); font-size: 0.9rem;">No services listed for this branch.</span>`;
+    }
 
     const scheduleContainer = document.getElementById('modal-branch-schedule');
     scheduleContainer.innerHTML = '';
@@ -201,20 +223,19 @@ function openBranchDetails(id) {
     if (branch.schedule && branch.schedule.length > 0) {
         branch.schedule.forEach(day => {
             scheduleContainer.innerHTML += `
-                <div class="d-flex justify-content-between mb-2 border-bottom pb-1">
-                    <span class="text-muted small">${day.dayOfWeek}</span>
-                    <span class="fw-bold text-dark small">${day.openTime} - ${day.closeTime}</span>
+                <div class="d-flex justify-content-between mb-2 pb-1 border-bottom" style="border-color: #f1f2f6 !important;">
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">${day.dayOfWeek}</span>
+                    <span class="fw-bold" style="color: var(--text-main); font-size: 0.9rem;">${day.openTime} - ${day.closeTime}</span>
                 </div>`;
         });
     } else {
-        scheduleContainer.innerHTML = '<p class="text-muted small">Schedule unavailable.</p>';
+        scheduleContainer.innerHTML = '<p style="color: var(--text-muted);">Schedule unavailable.</p>';
     }
 
-    // Исправленная ссылка на Google Maps
     const mapBtn = document.getElementById('btn-google-maps');
     if (mapBtn) {
-        const query = `${branch.locationDTO.address}, ${branch.locationDTO.city}`;
-        mapBtn.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+        const query = encodeURIComponent(addrText);
+        mapBtn.href = `https://www.google.com/maps/search/?api=1&query=${query}`;
     }
 
     new bootstrap.Modal(document.getElementById('branchDetailsModal')).show();

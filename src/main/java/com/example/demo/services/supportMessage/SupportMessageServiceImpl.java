@@ -7,6 +7,7 @@ import com.example.demo.models.user.User;
 import com.example.demo.repositories.SupportMessageRepository;
 import com.example.demo.services.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,7 +73,15 @@ public class SupportMessageServiceImpl implements SupportMessageService {
     @Transactional
     @Override
     public List<SupportDTO> search(String userEmail, LocalDate date){
-        List<SupportMessage> supportMessages = supportMessageRepository.search(userEmail, date);
+        LocalDateTime startOfDay = null;
+        LocalDateTime endOfDay = null;
+
+        if (date != null) {
+            startOfDay = date.atStartOfDay();
+            endOfDay = date.atTime(LocalTime.MAX);
+        }
+
+        List<SupportMessage> supportMessages = supportMessageRepository.search(userEmail, startOfDay, endOfDay);
         List<SupportDTO> supportDTOs = new ArrayList<>();
         for(SupportMessage supportMessage : supportMessages){
             supportDTOs.add(supportMessage.toDTO());

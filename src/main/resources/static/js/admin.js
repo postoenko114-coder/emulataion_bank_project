@@ -4,7 +4,7 @@
  * =========================================================
  */
 const API_BASE = '/api/v1/admin';
-let jwtToken = localStorage.getItem('accessToken');
+let jwtToken = sessionStorage.getItem('accessToken');
 let currentManageUserId = null;
 let currentManageUsername = null;
 let modalInstance = null;
@@ -40,7 +40,9 @@ async function adminFetch(url, options = {}) {
         const response = await fetch(url, { ...options, headers });
 
         if (response.status === 401 || response.status === 403) {
-            console.warn("Unauthorized access");
+            alert("Session expired. Please login again.");
+            sessionStorage.removeItem('jwtToken');
+            window.location.href = 'login.html';
             return null;
         }
 
@@ -79,7 +81,7 @@ function loadSection(section) {
         case 'reservations': title.textContent = 'Global Reservations'; loadGlobalReservations(); break;
         case 'branches': title.textContent = 'Branches'; fetchBranches(); break;
         case 'services': title.textContent = 'Services'; fetchServices(); break;
-        case 'support': title.textContent = 'Support Center'; fetchSupport(); break;
+        case 'support': title.textContent = 'Support Center'; loadSupport(); break;
     }
 }
 
@@ -593,7 +595,7 @@ function openCreateBranchModal() {
         const city = document.getElementById('cb-city').value;
         const addr = document.getElementById('cb-address').value;
         const postCode = document.getElementById('cb-postcode').value;
-        if (!name || !city || !addr || !postCode) return alert("Please fill in all required fields");
+        if (!name || !city || !addr || !postCode ) return alert("Please fill in all required fields");
 
         const dto = { bankBranchName: name, locationDTO: { country, city, address: addr, postCode }, schedule: [], bankServices: [] };
         const res = await adminFetch(`${API_BASE}/branches`, { method: 'POST', body: JSON.stringify(dto) });
@@ -635,6 +637,10 @@ async function openEditBranchModal(branchId) {
                 <div class="col-md-6 mb-3"><label class="form-label-custom">Post Code</label><input type="text" id="eb-postcode" class="form-control" value="${b.locationDTO?.postCode || ''}"></div>
             </div>
             <div class="mb-3"><label class="form-label-custom">Address</label><input type="text" id="eb-address" class="form-control" value="${b.locationDTO?.address || ''}"></div>
+            <div class="row">
+                <div class="col-md-6 mb-3"><label class="form-label-custom">Latitude</label><input type="text" id="eb-latitude" class="form-control" value="${b.locationDTO?.latitude || ''}"></div>
+                <div class="col-md-6 mb-3"><label class="form-label-custom">Longitude</label><input type="text" id="eb-longitude" class="form-control" value="${b.locationDTO?.longitude || ''}"></div>
+            </div>
         </div>
         <div id="tab-schedule" class="tab-content-block" style="display:none;">${scheduleHtml}</div>
         <div id="tab-services" class="tab-content-block" style="display:none;">
@@ -662,6 +668,8 @@ async function openEditBranchModal(branchId) {
                 city: document.getElementById('eb-city').value,
                 address: document.getElementById('eb-address').value,
                 postCode: document.getElementById('eb-postcode').value,
+                latitude: document.getElementById('eb-latitude').value,
+                longitude: document.getElementById('eb-longitude').value,
             },
             schedule: newSchedule,
             bankServices: tempBranchServices
@@ -695,20 +703,76 @@ window.removeServiceFromLocalList = function (serviceId) {
 
 // ==========================================
 // 3. SERVICES
-// ==========================================
-async function fetchServices(query = "") {
-    let url = `${API_BASE}/services`;
-    if (query) url = `${API_BASE}/services/filter/name?serviceName=${query}`;
-    let data = await adminFetch(url);
-    let services = Array.isArray(data) ? data : (data && data.id ? [data] : []);
-    const toolbar = `<div class="toolbar"><div class="search-container"><i class="fa-solid fa-magnifying-glass search-icon"></i><input type="text" class="form-control search-input" placeholder="Search service..." value="${query}" onkeypress="if(event.key==='Enter') fetchServices(this.value)"></div><div class="d-flex gap-2"><button class="btn btn-info text-white fw-bold" onclick="openAvailabilityModal()">Check Availability</button><button class="btn btn-primary-custom" onclick="openCreateServiceModal()">+ New Service</button></div></div>`;
-    if (services.length === 0) { document.getElementById('content-area').innerHTML = toolbar + '<div class="text-center text-muted py-5">No services found.</div>'; return; }
-    let rows = services.map(s => `<tr><td class="fw-bold">${s.bankServiceName}</td><td>${s.duration}</td><td class="text-muted small">${s.description || '-'}</td><td class="text-end"><button class="btn-icon" onclick="openEditServiceModal(${s.id})"><i class="fa-solid fa-pen"></i></button><button class="btn-icon delete" onclick="deleteService(${s.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');
+let cachedServices = [];
+
+async function fetchServices() {
+    const data = await adminFetch(`${API_BASE}/services`);
+    cachedServices = Array.isArray(data) ? data : (data && data.id ? [data] : []);
+    renderServicesTable(cachedServices);
+}
+
+function renderServicesTable(services) {
+    const container = document.getElementById('content-area');
+
+    const toolbar = `
+        <div class="toolbar">
+            <div class="search-container">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" class="form-control search-input" 
+                       placeholder="Search service..." 
+                       onkeyup="filterServices(this.value)"> 
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-info text-white fw-bold" onclick="openAvailabilityModal()">Check Availability</button>
+                <button class="btn btn-primary-custom" onclick="openCreateServiceModal()">+ New Service</button>
+            </div>
+        </div>`;
+
+    if (!services || services.length === 0) {
+        container.innerHTML = toolbar + '<div class="text-center text-muted py-5">No services found.</div>';
+        return;
+    }
+
+    let rows = services.map(s => `
+        <tr>
+            <td class="fw-bold">${s.bankServiceName}</td>
+            <td>${s.duration}</td>
+            <td class="text-muted small">${s.description || '-'}</td>
+            <td class="text-end">
+                <button class="btn-icon" onclick="openEditServiceModal(${s.id})"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn-icon delete" onclick="deleteService(${s.id})"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        </tr>`).join('');
+
     renderTable(toolbar, ['Service Name', 'Duration', 'Description', 'Actions'], rows);
 }
 
+function filterServices(query) {
+    if (!query) {
+        renderServicesTable(cachedServices);
+        return;
+    }
+
+    const lowerQuery = query.toLowerCase();
+    const filtered = cachedServices.filter(s =>
+        s.bankServiceName.toLowerCase().includes(lowerQuery) ||
+        (s.description && s.description.toLowerCase().includes(lowerQuery))
+    );
+
+    renderServicesTable(filtered);
+
+    const input = document.querySelector('.search-input');
+    if (input) {
+        input.value = query;
+        input.focus();
+    }
+}
+
 async function deleteService(id) {
-    if (confirm('Delete service?')) { await adminFetch(`${API_BASE}/services/${id}`, { method: 'DELETE' }); fetchServices(); }
+    if (confirm('Delete service?')) {
+        await adminFetch(`${API_BASE}/services/${id}`, { method: 'DELETE' });
+        fetchServices();
+    }
 }
 
 function openCreateServiceModal() {
@@ -729,37 +793,87 @@ async function openEditServiceModal(id) {
 }
 
 async function openAvailabilityModal() {
-    const branches = await adminFetch(`${API_BASE}/branches`);
-    const services = await adminFetch(`${API_BASE}/services`);
-    const bOpts = branches.map(b => `<option value="${b.bankBranchName}">${b.bankBranchName}</option>`).join('');
-    const sOpts = services.map(s => `<option value="${s.id}">${s.bankServiceName}</option>`).join('');
-    const html = `<div class="mb-3"><label class="form-label-custom">Branch</label><select id="av-branch" class="form-select">${bOpts}</select></div><div class="mb-3"><label class="form-label-custom">Service</label><select id="av-service" class="form-select">${sOpts}</select></div><div class="mb-3"><label class="form-label-custom">Date</label><input type="date" id="av-date" class="form-control"></div><div id="av-result" class="mt-3 text-center fw-bold"></div>`;
-    showModal('Check Availability', html, performAvailabilityCheck, "Check", true);
+    try {
+        const branches = await adminFetch(`${API_BASE}/branches`);
+        const services = await adminFetch(`${API_BASE}/services`);
+        const bOpts = (branches || []).map(b => `<option value="${b.bankBranchName}">${b.bankBranchName}</option>`).join('');
+        const sOpts = (services || []).map(s => `<option value="${s.id}">${s.bankServiceName}</option>`).join('');
+
+        const html = `
+            <div class="mb-3">
+                <label class="form-label-custom">Branch</label>
+                <select id="av-branch" class="form-select">${bOpts}</select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label-custom">Service</label>
+                <select id="av-service" class="form-select">${sOpts}</select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label-custom">Date</label>
+                <input type="date" id="av-date" class="form-control">
+            </div>
+            <div id="av-result" class="mt-3 text-center fw-bold" style="min-height: 24px;"></div>
+        `;
+
+        showModal('Check Availability', html, performAvailabilityCheck, "Check", true);
+
+    } catch (e) {
+        alert("Failed to load data for modal.");
+    }
 }
 
 async function performAvailabilityCheck() {
     const branchName = document.getElementById('av-branch').value;
     const serviceId = document.getElementById('av-service').value;
     const dateIso = document.getElementById('av-date').value;
-    if (!dateIso) return alert("Select a date");
-    const [y, m, d] = dateIso.split('-');
-    const formattedDate = `${d}.${m}.${y}`;
+
     const resDiv = document.getElementById('av-result');
-    resDiv.textContent = "Checking...";
+    resDiv.textContent = "";
+
+    if (!dateIso) {
+        alert("Select a date");
+        return;
+    }
+
+    resDiv.innerHTML = '<div class="spinner-border spinner-border-sm text-primary"></div> Checking...';
+
     try {
-        const url = `${API_BASE}/services/${serviceId}/availability?branchName=${encodeURIComponent(branchName)}&date=${formattedDate}`;
-        const response = await fetch(url, { headers: { 'Authorization': `Bearer ${jwtToken}` } });
+
+        const currentToken = sessionStorage.getItem('accessToken');
+
+        if (!currentToken || currentToken === "null") {
+            alert("No authorization token found. Please login.");
+            window.location.href = "login.html"; // Редирект на вход
+            return;
+        }
+
+        const url = `${API_BASE}/services/${serviceId}/availability?branchName=${encodeURIComponent(branchName)}&date=${dateIso}`;
+
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${currentToken}` // Теперь здесь точно не "null"
+            }
+        });
+
         if (response.ok) {
             const text = await response.text();
             resDiv.innerHTML = `<i class="fa-solid fa-check-circle me-2"></i>Available! <br><span class="small fw-normal">${text}</span>`;
             resDiv.className = "mt-3 text-center text-success fw-bold";
         } else {
+            if (response.status === 401 || response.status === 403) {
+                alert("Session expired. Please login again.");
+                sessionStorage.removeItem('accessToken');
+                window.location.href = "login.html";
+                return;
+            }
             resDiv.innerHTML = `<i class="fa-solid fa-times-circle me-2"></i>Not Available`;
             resDiv.className = "mt-3 text-center text-danger fw-bold";
         }
-    } catch (e) { resDiv.textContent = "Error"; }
+    } catch (e) {
+        console.error(e);
+        resDiv.innerHTML = '<span class="text-danger">Connection Error</span>';
+    }
 }
-
 // ==========================================
 // 4. GLOBAL RESERVATIONS
 // ==========================================
@@ -795,7 +909,7 @@ async function fetchGlobalReservations() {
     const res = await adminFetch(url);
     if (!res || !Array.isArray(res) || res.length === 0) {
         container.innerHTML = '<div class="text-center text-muted py-5">No reservations found.</div>';
-        return;
+        return ;
     }
 
     let rows = res.map(r => {
@@ -827,71 +941,160 @@ async function adminResAction(id, action) {
 }
 
 async function openGlobalCreateReservationModal() {
-    const branches = await adminFetch(`${API_BASE}/branches`);
-    const services = await adminFetch(`${API_BASE}/services`);
-    const bOpts = branches.map(b => `<option value="${b.bankBranchName}">${b.bankBranchName}</option>`).join('');
-    const sOpts = services.map(s => `<option value="${s.bankServiceName}">${s.bankServiceName}</option>`).join('');
-    const html = `<div class="mb-3"><label class="form-label-custom">Client Username</label><input type="text" id="new-res-user" class="form-control"></div><div class="row g-2"><div class="col-md-6 mb-3"><label class="form-label-custom">Branch</label><select id="new-res-branch" class="form-select">${bOpts}</select></div><div class="col-md-6 mb-3"><label class="form-label-custom">Service</label><select id="new-res-service" class="form-select">${sOpts}</select></div></div><div class="mb-3"><label class="form-label-custom">Date</label><input type="datetime-local" id="new-res-date" class="form-control"></div>`;
-    showModal('New Reservation', html, async () => {
-        const p = new URLSearchParams({ username: document.getElementById('new-res-user').value, startReservation: document.getElementById('new-res-date').value, serviceName: document.getElementById('new-res-service').value, branchName: document.getElementById('new-res-branch').value });
-        await adminFetch(`${API_BASE}/reservations?${p.toString()}`, { method: 'POST' }); fetchGlobalReservations(); hideModal();
-    }, "Create");
+    try {
+        const branches = await adminFetch(`${API_BASE}/branches`); // Предполагаю, что adminFetch возвращает JSON
+        const services = await adminFetch(`${API_BASE}/services`);
+        const bOpts = (branches || []).map(b => `<option value="${b.bankBranchName}">${b.bankBranchName}</option>`).join('');
+        const sOpts = (services || []).map(s => `<option value="${s.bankServiceName}">${s.bankServiceName}</option>`).join('');
+
+        const html = `
+            <div class="mb-3">
+                <label class="form-label-custom">Client Username</label>
+                <input type="text" id="new-res-user" class="form-control" placeholder="Enter username">
+            </div>
+            <div class="row g-2">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label-custom">Branch</label>
+                    <select id="new-res-branch" class="form-select">${bOpts}</select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label-custom">Service</label>
+                    <select id="new-res-service" class="form-select">${sOpts}</select>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label-custom">Date & Time</label>
+                <input type="datetime-local" id="new-res-date" class="form-control">
+            </div>`;
+
+        showModal('New Reservation', html, async () => {
+            const usernameInput = document.getElementById('new-res-user');
+            const dateInput = document.getElementById('new-res-date');
+            const branchInput = document.getElementById('new-res-branch');
+            const serviceInput = document.getElementById('new-res-service');
+
+            const username = usernameInput.value.trim();
+            const dateVal = dateInput.value;
+            if (!username) {
+                alert("Please enter a Client Username!");
+                usernameInput.focus();
+                return;
+            }
+            if (!dateVal) {
+                alert("Please select a Date and Time for the reservation!");
+                dateInput.focus();
+                return;
+            }
+            try {
+                const p = new URLSearchParams({
+                    username: username,
+                    startReservation: dateVal,
+                    serviceName: serviceInput.value,
+                    branchName: branchInput.value
+                });
+
+                await adminFetch(`${API_BASE}/reservations?${p.toString()}`, { method: 'POST' });
+
+                fetchGlobalReservations();
+                hideModal();
+
+            } catch (e) {
+                console.error(e);
+                alert("Error creating reservation. Check console for details.");
+            }
+
+        }, "Create");
+
+    } catch (e) {
+        console.error("Error opening modal:", e);
+        alert("Failed to load branches or services.");
+    }
 }
 
 // ==========================================
 // 5. SUPPORT
 // ==========================================
-async function fetchSupport() {
+async function loadSupport() {
+    const msgs = await adminFetch(`${API_BASE}/supportMessages`);
+    cachedSupportMessages = msgs || [];
+
+    renderSupportUI(cachedSupportMessages, '', '');
+}
+
+async function filterSupport() {
     const emailInput = document.getElementById('supp-filter-email');
     const dateInput = document.getElementById('supp-filter-date');
-    const currentEmail = emailInput ? emailInput.value : '';
+
+    const currentEmail = emailInput ? emailInput.value.trim() : '';
     const currentDate = dateInput ? dateInput.value : '';
 
     const params = new URLSearchParams();
     if (currentEmail) params.append('email', currentEmail);
-    if (currentDate) params.append('date', currentDate.split('-').reverse().join('.'));
+
+    if (currentDate) params.append('date', currentDate);
 
     const msgs = await adminFetch(`${API_BASE}/supportMessages/search?${params.toString()}`);
     cachedSupportMessages = msgs || [];
 
+    renderSupportUI(cachedSupportMessages, currentEmail, currentDate);
+}
+
+function renderSupportUI(messages, emailVal, dateVal) {
     const container = document.getElementById('content-area');
+
     const toolbar = `
         <div class="toolbar mb-3">
              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 w-100">
                  <h5 class="m-0 fw-bold">Support Center</h5>
                  <div class="d-flex gap-2">
-                     <input type="text" id="supp-filter-email" class="form-control" placeholder="Filter by Email" value="${currentEmail}" style="width: 200px;">
-                     <input type="date" id="supp-filter-date" class="form-control" value="${currentDate}" style="width: 150px;">
-                     <button class="btn btn-primary-custom" onclick="fetchSupport()"><i class="fa-solid fa-magnifying-glass"></i></button>
-                     <button class="btn btn-light border" onclick="clearSupportFilters()">Reset</button>
+                     <input type="text" id="supp-filter-email" class="form-control" 
+                            placeholder="Filter by Email" value="${emailVal}" style="width: 200px;">
+                     <input type="date" id="supp-filter-date" class="form-control" 
+                            value="${dateVal}" style="width: 150px;">
+                     
+                     <button class="btn btn-primary-custom" onclick="filterSupport()">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                     </button>
+                     
+                     <button class="btn btn-light border" onclick="loadSupport()">Reset</button>
                  </div>
              </div>
         </div>
     `;
 
-    if (!msgs || msgs.length === 0) {
-        container.innerHTML = toolbar + '<div class="text-center text-muted py-5">No messages found matching criteria.</div>';
+    if (!messages || messages.length === 0) {
+        container.innerHTML = toolbar + '<div class="text-center text-muted py-5">No messages found.</div>';
         return;
     }
 
-    let rows = msgs.map(m => {
+    let rows = messages.map(m => {
         const previewText = m.message.length > 60 ? m.message.substring(0, 60) + '...' : m.message;
         const userDisplay = m.userEmail || '<span class="text-muted fst-italic">Unknown</span>';
+
         return `<tr>
-            <td><div class="fw-bold text-dark">${new Date(m.createdAt).toLocaleDateString()}</div><div class="small text-muted">${new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></td>
+            <td>
+                <div class="fw-bold text-dark">${new Date(m.createdAt).toLocaleDateString()}</div>
+                <div class="small text-muted">${new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+            </td>
             <td>${userDisplay}</td>
             <td>${previewText}</td>
-            <td class="text-end"><button class="btn btn-outline-primary btn-sm fw-bold" onclick="openReplyModal(${m.id})"><i class="fa-solid fa-reply me-1"></i> Reply</button></td>
+            <td class="text-end">
+                <button class="btn btn-outline-primary btn-sm fw-bold" onclick="openReplyModal(${m.id})">
+                    <i class="fa-solid fa-reply me-1"></i> Reply
+                </button>
+            </td>
         </tr>`;
     }).join('');
 
     renderTable(toolbar, ['Date', 'From', 'Message', 'Action'], rows);
-}
 
-function clearSupportFilters() {
-    if(document.getElementById('supp-filter-email')) document.getElementById('supp-filter-email').value = '';
-    if(document.getElementById('supp-filter-date')) document.getElementById('supp-filter-date').value = '';
-    fetchSupport();
+    if(emailVal) {
+        const input = document.getElementById('supp-filter-email');
+        if(input) {
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+        }
+    }
 }
 
 function openReplyModal(msgId) {
@@ -908,7 +1111,7 @@ function openReplyModal(msgId) {
         const text = document.getElementById('support-reply-text').value;
         if (!text || text.trim() === "") return alert("Please enter a message.");
         const res = await adminFetch(`${API_BASE}/supportMessages/${msgId}/reply`, { method: 'POST', body: JSON.stringify({ messageId: msgId, replyText: text }) });
-        if (res) { alert("Reply sent successfully!"); hideModal(); fetchSupport(); }
+        if (res) { alert("Reply sent successfully!"); hideModal(); loadSupport(); }
     }, "Send Reply");
 }
 

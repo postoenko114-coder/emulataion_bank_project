@@ -21,7 +21,7 @@ public interface BankBranchRepository extends JpaRepository<BankBranch,Long> {
     );
 
     @Query(value = "SELECT * FROM bank_branches " +
-            "ORDER BY ST_Distance_Sphere(POINT(:userLon, :userLat), POINT(longitude, latitude)) " +
+            "ORDER BY (6371 * acos(cos(radians(:userLat)) * cos(radians(latitude)) * cos(radians(longitude) - radians(:userLon)) + sin(radians(:userLat)) * sin(radians(latitude)))) " +
             "LIMIT 10",
             nativeQuery = true)
     List<BankBranch> findNearestBranchesNative(
@@ -29,7 +29,7 @@ public interface BankBranchRepository extends JpaRepository<BankBranch,Long> {
             @Param("userLon") double userLon
     );
 
-    @Query("SELECT b FROM BankBranch b JOIN b.bankServices s WHERE s.bankServiceName = :serviceName")
+    @Query("SELECT b FROM BankBranch b JOIN b.bankServices s WHERE UPPER(s.bankServiceName) LIKE UPPER(CONCAT('%', :serviceName, '%'))")
     List<BankBranch> findByServiceName(@Param("serviceName") String serviceName);
 
 

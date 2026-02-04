@@ -10,6 +10,6 @@ import java.util.List;
 @Repository
 public interface BankServiceRepository extends JpaRepository<BankService,Long> {
 
-    @Query("SELECT ss FROM BankService ss WHERE ss.bankServiceName LIKE %:serviceName% ")
+    @Query("SELECT ss FROM BankService ss WHERE UPPER(ss.bankServiceName) LIKE UPPER(CONCAT('%', :serviceName, '%'))")
     List<BankService> findByBankServiceName(@Param("serviceName") String serviceName);
 }

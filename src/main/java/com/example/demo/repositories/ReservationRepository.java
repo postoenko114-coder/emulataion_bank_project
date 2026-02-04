@@ -18,21 +18,13 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
     @Query("SELECT COUNT(r) FROM Reservation r WHERE " +
             "r.bankBranch.id = :branchId AND " +
             "r.bankService.id = :serviceId AND " +
-            "CAST(r.startReservation AS date) = :date AND " +
-            "r.status = 'ACTIVE'")
+            "r.status = 'ACTIVE' AND " +
+            "r.startReservation BETWEEN :startOfDay AND :endOfDay")
     Long countBookedSlots(@Param("branchId") Long branchId,
                           @Param("serviceId") Long serviceId,
-                          @Param("date") LocalDate date);
+                          @Param("startOfDay") LocalDateTime startOfDay,
+                          @Param("endOfDay") LocalDateTime endOfDay);
 
-    @Query("SELECT r FROM Reservation r WHERE " +
-            "r.bankService.id = :resourceId AND " +
-            "r.startReservation < :targetEnd AND r.endReservation > :targetStart AND " +
-            "r.status = 'ACTIVE'")
-    List<Reservation> findReservationsForDay(@Param("resourceId") Long serviceId,
-                                             @Param("targetStart") LocalDateTime targetStart,
-                                             @Param("targetEnd") LocalDateTime targetEnd);
-
-    // Проверка на пересечение (оверлаппинг)
     @Query("SELECT COUNT(r) > 0 FROM Reservation r WHERE r.bankService.id = :serviceId " +
             "AND r.status = 'ACTIVE' " +
             "AND r.startReservation < :endReservation AND r.endReservation > :startReservation")
@@ -41,8 +33,14 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
                                          @Param("endReservation") LocalDateTime endReservation);
 
     @Query("SELECT r FROM Reservation r WHERE " +
-            "(:branchId IS NULL OR r.bankBranch.id = :branchId) AND " +
-            "(:serviceId IS NULL OR r.bankService.id = :serviceId) AND " +
-            "(:date IS NULL OR CAST(r.startReservation AS LocalDate) = :date)")
-    List<Reservation> findReservationsByFilters(Long branchId, Long serviceId, LocalDate date);
+                  "(:branchId IS NULL OR r.bankBranch.id = :branchId) AND " +
+                  "(:serviceId IS NULL OR r.bankService.id = :serviceId) AND " +
+            "(CAST(:startOfDay as timestamp) IS NULL OR r.startReservation >= :startOfDay) AND " +
+            "(CAST(:endOfDay as timestamp) IS NULL OR r.startReservation <= :endOfDay)")
+    List<Reservation> findReservationsByFilters(
+            @Param("branchId") Long branchId,
+            @Param("serviceId") Long serviceId,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay
+    );
 }

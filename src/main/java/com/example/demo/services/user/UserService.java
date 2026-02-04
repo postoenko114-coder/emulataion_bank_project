@@ -29,6 +29,9 @@ public interface UserService {
     User findUserByEmail(String email);
 
     @Transactional
+    Boolean checkEmail(String email);
+
+    @Transactional
     UserDTO updateUser(Long user_id, UserDTO userDTO);
 
     @Transactional

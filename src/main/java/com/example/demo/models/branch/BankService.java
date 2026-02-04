@@ -21,9 +21,9 @@ public class BankService {
     private String description;
 
     @ManyToMany
-    @JoinTable(name = "bankBranch_service",
+    @JoinTable(name = "bankBranch_bankService",
             joinColumns = @JoinColumn(name = "bankBranch_id"),
-            inverseJoinColumns = @JoinColumn(name = "service_id"))
+            inverseJoinColumns = @JoinColumn(name = "bankService_id"))
     private Set<BankBranch> bankBranches ;
 
     @OneToMany(mappedBy = "bankService",  cascade = CascadeType.ALL,  orphanRemoval = true)

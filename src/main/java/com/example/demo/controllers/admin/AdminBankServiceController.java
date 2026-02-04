@@ -6,7 +6,6 @@ import com.example.demo.models.branch.BankService;
 import com.example.demo.services.bankBranch.BankBranchService;
 import com.example.demo.services.bankService.BankServiceService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -50,7 +49,7 @@ public class AdminBankServiceController {
     }
 
     @GetMapping("/{bankServiceId}/availability")
-    public ResponseEntity<String> getAvailabilityServiceOnDate(@PathVariable Long bankServiceId, @RequestParam String branchName, @RequestParam @DateTimeFormat(pattern = "dd.MM.yyyy") LocalDate date) {
+    public ResponseEntity<String> getAvailabilityServiceOnDate(@PathVariable Long bankServiceId, @RequestParam String branchName, @RequestParam LocalDate date) {
         BankBranch bankBranch = bankBranchService.findBranchByName(branchName);
         if (!bankServiceService.getAvailabilityServiceByDate(bankBranch.getId(), bankServiceId, date)) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();

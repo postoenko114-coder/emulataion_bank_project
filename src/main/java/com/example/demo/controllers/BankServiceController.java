@@ -47,13 +47,4 @@ public class BankServiceController {
         return bankServiceService.getServicesList();
     }
 
-    @GetMapping("/{bankServiceId}/availability")
-    public ResponseEntity<String> getAvailabilityServiceOnDate(@PathVariable Long bankServiceId, @RequestParam String branchName, @RequestParam @DateTimeFormat(pattern = "dd.MM.yyyy") LocalDate date) {
-        BankBranch bankBranch = bankBranchService.findBranchByName(branchName);
-        if (!bankServiceService.getAvailabilityServiceByDate(bankBranch.getId(), bankServiceId, date)) {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
-        }
-        return ResponseEntity.ok("Service available on date" + date.toString());
-    }
-
 }

@@ -34,7 +34,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDTOAdmin createUser(UserCreateDTO createDTO){
         User user = new User();
-        user.setEmail(createDTO.getEmail());
+        if(checkUsername(createDTO.getUsername())){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
+        }else {
+            user.setUsername(createDTO.getUsername());
+        }
+        if(checkEmail(createDTO.getEmail())){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already using");
+        }else{
+            user.setEmail(createDTO.getEmail());
+        }
         user.setPassword(passwordEncoder.encode(createDTO.getPassword()));
         user.setRoleUser(RoleUser.valueOf(createDTO.getRoleUser()));
         user.setCreatedAt(LocalDateTime.now());
@@ -75,7 +84,6 @@ public class UserServiceImpl implements UserService {
         return userDTOAdmins;
     }
 
-
     @Transactional
     @Override
     public User findUserByUsername(String username){
@@ -87,6 +95,13 @@ public class UserServiceImpl implements UserService {
     public User findUserByEmail(String email){
         return userRepository.findByEmail(email).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"User not found"));
     }
+
+    @Transactional
+    @Override
+    public Boolean checkEmail(String email){
+        return userRepository.findByEmail(email).isPresent();
+    }
+
 
     @Transactional
     @Override
@@ -124,6 +139,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUserById(Long user_id){
        userRepository.deleteById(user_id);
+    }
+
+    private Boolean checkUsername(String username){
+        return userRepository.findByUsername(username).isPresent();
     }
 
 }

@@ -15,7 +15,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @Service
 public class BankServiceServiceImpl implements BankServiceService {
@@ -87,14 +86,28 @@ public class BankServiceServiceImpl implements BankServiceService {
     @Transactional
     @Override
     public Boolean getAvailabilityServiceByDate(Long bankBranch_id, Long bankService_id, LocalDate date) {
-        BankBranch bankBranch = bankBranchRepository.findById(bankBranch_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bank Branch Not Found"));
-        Set<BankService> bankServices = bankBranch.getBankServices();
-        BankService bankService = bankServiceRepository.findById(bankService_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bank Service Not Found"));
-
-        if (reservationRepository.countBookedSlots(bankBranch_id, bankService_id, date ) < 10) {
-            return true;
+        if (date == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Date is required");
         }
-        return false;
+
+        BankBranch bankBranch = bankBranchRepository.findById(bankBranch_id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bank Branch Not Found"));
+
+        BankService bankService = bankServiceRepository.findById(bankService_id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bank Service Not Found"));
+
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        boolean isOpenToday = bankBranch.getSchedule().stream()
+                .anyMatch(s -> s.getDayOfWeek().toString().equalsIgnoreCase(dayOfWeek.toString()));
+
+        if (!isOpenToday) {
+            return false;
+        }
+
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+
+        return reservationRepository.countBookedSlots(bankBranch_id, bankService_id, startOfDay, endOfDay) < 10;
     }
 
     @Transactional
