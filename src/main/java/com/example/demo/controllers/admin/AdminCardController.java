@@ -13,10 +13,10 @@ import java.util.List;
 @RequestMapping("/api/v1/admin/{userId}/cards")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminCardController {
-    @Autowired
-    CardService cardService;
-    @Autowired
-    AccountService accountService;
+
+    private final CardService cardService;
+
+    private final AccountService accountService;
 
     public AdminCardController(CardService cardService, AccountService accountService) {
         this.cardService = cardService;

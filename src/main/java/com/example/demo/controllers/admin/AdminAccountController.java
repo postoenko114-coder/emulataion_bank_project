@@ -12,8 +12,8 @@ import java.util.List;
 @RequestMapping("/api/v1/admin/{userId}/accounts")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminAccountController {
-    @Autowired
-    private AccountService accountService;
+
+    private final AccountService accountService;
 
     public AdminAccountController(AccountService accountService) {
         this.accountService = accountService;

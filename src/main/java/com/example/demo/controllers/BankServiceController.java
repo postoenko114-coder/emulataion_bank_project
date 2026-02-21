@@ -17,10 +17,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/services")
 public class BankServiceController {
-    @Autowired
-    private BankServiceService bankServiceService;
-    @Autowired
-    private BankBranchService bankBranchService;
+
+    private final BankServiceService bankServiceService;
+
+    private final BankBranchService bankBranchService;
 
     public BankServiceController(BankServiceService bankServiceService, BankBranchService bankBranchService) {
         this.bankServiceService = bankServiceService;

@@ -13,8 +13,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/{userId}/notifications")
 public class NotificationController {
-    @Autowired
-    private NotificationService notificationService;
+
+    private final NotificationService notificationService;
 
     public NotificationController(NotificationService notificationService) {
         this.notificationService = notificationService;

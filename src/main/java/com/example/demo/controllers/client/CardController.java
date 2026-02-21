@@ -11,10 +11,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/{userId}/cards")
 public class CardController {
-    @Autowired
-    private CardService cardService;
-    @Autowired
-    private AccountService accountService;
+
+    private final CardService cardService;
+
+    private final AccountService accountService;
 
     public CardController(CardService cardService, AccountService accountService) {
         this.cardService = cardService;

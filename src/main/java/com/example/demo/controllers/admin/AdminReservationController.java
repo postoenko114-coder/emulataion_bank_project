@@ -17,14 +17,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/reservations")
 public class AdminReservationController {
-    @Autowired
-    private ReservationService reservationService;
-    @Autowired
-    private BankBranchService bankBranchService;
-    @Autowired
-    private BankServiceService bankServiceService;
-    @Autowired
-    private UserService userService;
+
+    private final ReservationService reservationService;
+
+    private final BankBranchService bankBranchService;
+
+    private final BankServiceService bankServiceService;
+
+    private final UserService userService;
 
     public AdminReservationController(ReservationService reservationService,  BankBranchService bankBranchService, BankServiceService bankServiceService,  UserService userService) {
         this.reservationService = reservationService;

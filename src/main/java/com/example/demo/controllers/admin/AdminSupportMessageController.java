@@ -18,14 +18,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/supportMessages")
 public class AdminSupportMessageController {
-    @Autowired
-    private SupportMessageService supportMessageService;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private NotificationService notificationService;
-    @Autowired
-    private EmailService emailService;
+
+    private final SupportMessageService supportMessageService;
+
+    private final UserService userService;
+
+    private final NotificationService notificationService;
+
+    private final EmailService emailService;
 
 
     public AdminSupportMessageController(SupportMessageService supportMessageService, UserService userService, NotificationService notificationService, EmailService emailService) {

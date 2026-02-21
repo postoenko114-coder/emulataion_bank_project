@@ -18,8 +18,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/{userId}/transactions")
 public class TransactionController {
-    @Autowired
-    private TransactionService transactionService;
+
+    private final TransactionService transactionService;
 
     public TransactionController(TransactionService transactionService) {
         this.transactionService = transactionService;

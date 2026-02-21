@@ -12,8 +12,8 @@ import java.util.List;
 @RequestMapping("/api/v1/admin/branches")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminBankBranchController {
-    @Autowired
-    private BankBranchService bankBranchService;
+
+    private final BankBranchService bankBranchService;
 
     public AdminBankBranchController(BankBranchService bankBranchService) {
         this.bankBranchService = bankBranchService;

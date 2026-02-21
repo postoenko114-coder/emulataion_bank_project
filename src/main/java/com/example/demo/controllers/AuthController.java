@@ -19,10 +19,14 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    @Autowired
-    private AuthenticationService authService;
-    @Autowired
-    private UserService userService;
+    private final AuthenticationService authService;
+
+    private final UserService userService;
+
+    public AuthController(AuthenticationService authService, UserService userService) {
+        this.authService = authService;
+        this.userService = userService;
+    }
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> register(@RequestBody UserDTO request) {

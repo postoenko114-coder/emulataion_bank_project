@@ -10,8 +10,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/branches")
 public class BankBranchController {
-    @Autowired
-    BankBranchService bankBranchService;
+
+    private final BankBranchService bankBranchService;
 
     public BankBranchController(BankBranchService bankBranchService) {
         this.bankBranchService = bankBranchService;

@@ -18,10 +18,10 @@ import java.util.List;
 @RequestMapping("/api/v1/admin/services")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminBankServiceController {
-    @Autowired
-    private BankServiceService bankServiceService;
-    @Autowired
-    private BankBranchService bankBranchService;
+
+    private final BankServiceService bankServiceService;
+
+    private final BankBranchService bankBranchService;
 
     public AdminBankServiceController(BankServiceService bankServiceService, BankBranchService bankBranchService) {
         this.bankServiceService = bankServiceService;

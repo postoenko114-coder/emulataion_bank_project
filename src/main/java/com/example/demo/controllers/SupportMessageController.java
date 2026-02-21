@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/support")
 public class SupportMessageController {
-    @Autowired
-    private SupportMessageService supportMessageService;
+
+    private final SupportMessageService supportMessageService;
 
     public SupportMessageController(SupportMessageService supportMessageService) {
         this.supportMessageService = supportMessageService;

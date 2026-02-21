@@ -18,8 +18,8 @@ import java.util.List;
 @RequestMapping("/api/v1/admin/{userId}/transactions")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminTransactionController {
-    @Autowired
-    private TransactionService transactionService;
+
+    private final TransactionService transactionService;
 
     public AdminTransactionController(TransactionService transactionService) {
         this.transactionService = transactionService;

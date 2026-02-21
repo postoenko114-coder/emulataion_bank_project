@@ -19,10 +19,10 @@ import java.util.List;
 @RequestMapping("/api/v1/admin/{userId}/notifications")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminNotificationController {
-    @Autowired
-    private NotificationService notificationService;
-    @Autowired
-    private UserService userService;
+
+    private final NotificationService notificationService;
+
+    private final UserService userService;
 
     public AdminNotificationController(NotificationService notificationService,  UserService userService) {
         this.notificationService = notificationService;
