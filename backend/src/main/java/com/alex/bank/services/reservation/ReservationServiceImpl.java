@@ -19,7 +19,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -78,12 +77,9 @@ public class ReservationServiceImpl implements ReservationService {
     @Transactional
     @Override
     public List<ReservationDTO> getAllReservations(){
-        List<Reservation> reservations = reservationRepository.findAll();
-        List<ReservationDTO> dtos = new ArrayList<>();
-        for (Reservation reservation : reservations) {
-            dtos.add(reservationMapper.toDTO(reservation));
-        }
-        return dtos;
+        return reservationRepository.findAll().stream()
+                .map(reservationMapper::toDTO)
+                .toList();
     }
 
     @Transactional
@@ -97,12 +93,9 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public List<ReservationDTO> getAllReservationsOfUser(Long user_id){
         User user = userRepository.findById(user_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        List<Reservation> reservations = user.getReservations();
-        List<ReservationDTO> reservationDTOs = new ArrayList<>();
-        for(Reservation reservation : reservations){
-            reservationDTOs.add(reservationMapper.toDTO(reservation));
-        }
-        return reservationDTOs;
+        return user.getReservations().stream()
+                .map(reservationMapper::toDTO)
+                .toList();
     }
 
     @Transactional
@@ -129,12 +122,9 @@ public class ReservationServiceImpl implements ReservationService {
         LocalDateTime startDay = date.atStartOfDay();
         LocalDateTime endDay = date.atStartOfDay().plusDays(1);
 
-        List<Reservation> reservations = reservationRepository.findReservationsByFilters(bankBranch_id, bankService_id, startDay, endDay);
-        List<ReservationDTO> reservationDTOs = new ArrayList<>();
-        for (Reservation reservation : reservations) {
-            reservationDTOs.add(reservationMapper.toDTO(reservation));
-        }
-        return reservationDTOs;
+        return reservationRepository.findReservationsByFilters(bankBranch_id, bankService_id, startDay, endDay).stream()
+                .map(reservationMapper::toDTO)
+                .toList();
     }
 
     private LocalDateTime calculateEndTime(LocalDateTime start, String durationStr) {

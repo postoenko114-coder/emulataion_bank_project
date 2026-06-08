@@ -16,7 +16,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -62,12 +61,9 @@ public class SupportMessageServiceImpl implements SupportMessageService {
     @Transactional
     @Override
     public List<SupportDTO> getAllSupportMessages(){
-        List<SupportMessage> supportMessages = supportMessageRepository.findAll();
-        List<SupportDTO> supportDTOs = new ArrayList<>();
-        for (SupportMessage supportMessage : supportMessages) {
-            supportDTOs.add(supportMapper.toDTO(supportMessage));
-        }
-        return supportDTOs;
+        return supportMessageRepository.findAll().stream()
+                .map(supportMapper::toDTO)
+                .toList();
     }
 
     @Transactional
@@ -81,12 +77,9 @@ public class SupportMessageServiceImpl implements SupportMessageService {
             endOfDay = date.atTime(LocalTime.MAX);
         }
 
-        List<SupportMessage> supportMessages = supportMessageRepository.search(userEmail, startOfDay, endOfDay);
-        List<SupportDTO> supportDTOs = new ArrayList<>();
-        for(SupportMessage supportMessage : supportMessages){
-            supportDTOs.add(supportMapper.toDTO(supportMessage));
-        }
-        return supportDTOs;
+        return supportMessageRepository.search(userEmail, startOfDay, endOfDay).stream()
+                .map(supportMapper::toDTO)
+                .toList();
     }
 
     @Transactional

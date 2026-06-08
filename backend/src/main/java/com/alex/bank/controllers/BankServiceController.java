@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -31,12 +30,9 @@ public class BankServiceController {
     @Operation(summary = "Find public bank services by name")
     @GetMapping("/filter/name")
     public List<BankServiceDTO> getBankServiceByName(@RequestParam String name) {
-        List<BankService> bankServices = bankServiceService.findServiceByName(name);
-        List<BankServiceDTO> bankServiceDTOs = new ArrayList<>();
-        for (BankService bankService : bankServices) {
-            bankServiceDTOs.add(bankServiceMapper.toDTO(bankService));
-        }
-        return bankServiceDTOs;
+        return bankServiceService.findServiceByName(name).stream()
+                .map(bankServiceMapper::toDTO)
+                .toList();
     }
 
     @Operation(summary = "Get all public bank services")

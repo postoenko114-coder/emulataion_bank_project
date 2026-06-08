@@ -18,7 +18,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -53,12 +52,9 @@ public class BankServiceServiceImpl implements BankServiceService {
     @Transactional(readOnly = true)
     @Override
     public List<BankServiceDTO> getServicesList(){
-        List<BankService> bankServiceList = bankServiceRepository.findAll();
-        List<BankServiceDTO> bankServiceDTOList = new ArrayList<>();
-        for(BankService bankService : bankServiceList){
-            bankServiceDTOList.add(bankServiceMapper.toDTO(bankService));
-        }
-        return bankServiceDTOList;
+        return bankServiceRepository.findAll().stream()
+                .map(bankServiceMapper::toDTO)
+                .toList();
     }
 
     @Transactional(readOnly = true)

@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,12 +59,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public List<UserDTOAdmin> getAllUsers(){
-        List<User> users = userRepository.findAll();
-        List<UserDTOAdmin> userDTOAdmins = new ArrayList<>();
-        for(User user : users){
-            userDTOAdmins.add(userMapper.toDTOAdmin(user));
-        }
-        return userDTOAdmins;
+        return userRepository.findAll().stream()
+                .map(userMapper::toDTOAdmin)
+                .toList();
     }
 
     @Transactional
@@ -74,12 +70,9 @@ public class UserServiceImpl implements UserService {
         if (query == null || query.isBlank()) {
             return getAllUsers();
         }
-        List<User> users = userRepository.findByEmailOrUsernameOrId(query);
-        List<UserDTOAdmin> userDTOAdmins = new ArrayList<>();
-        for(User user : users){
-            userDTOAdmins.add(userMapper.toDTOAdmin(user));
-        }
-        return userDTOAdmins;
+        return userRepository.findByEmailOrUsernameOrId(query).stream()
+                .map(userMapper::toDTOAdmin)
+                .toList();
     }
 
     @Transactional

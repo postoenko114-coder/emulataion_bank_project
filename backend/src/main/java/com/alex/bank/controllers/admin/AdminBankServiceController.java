@@ -16,7 +16,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -47,12 +46,9 @@ public class AdminBankServiceController {
     @Operation(summary = "Find bank services by name as admin")
     @GetMapping("/filter/name")
     public List<BankServiceDTO> getBankServiceByName(@RequestParam String serviceName) {
-        List<BankService> bankServices = bankServiceService.findServiceByName(serviceName);
-        List<BankServiceDTO> bankServiceDTOs = new ArrayList<>();
-        for (BankService bankService : bankServices) {
-            bankServiceDTOs.add(bankServiceMapper.toDTO(bankService));
-        }
-        return bankServiceDTOs;
+        return bankServiceService.findServiceByName(serviceName).stream()
+                .map(bankServiceMapper::toDTO)
+                .toList();
     }
 
     @Operation(summary = "Check whether a bank service is available in a branch on a date")

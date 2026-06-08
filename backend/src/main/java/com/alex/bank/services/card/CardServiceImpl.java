@@ -22,7 +22,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -69,12 +68,9 @@ public class CardServiceImpl implements CardService {
     @Override
     public List<CardDTO> getListUserCards(Long user_id) {
         User user = userRepository.findById(user_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        List<Card> cards = user.getCards();
-        List<CardDTO> cardDTOs = new ArrayList<>();
-        for (Card card : cards) {
-            cardDTOs.add(cardMapper.toDTO(card));
-        }
-        return cardDTOs;
+        return user.getCards().stream()
+                .map(cardMapper::toDTO)
+                .toList();
     }
 
     @Transactional(readOnly = true)

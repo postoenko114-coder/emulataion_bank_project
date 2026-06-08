@@ -30,7 +30,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -188,12 +187,9 @@ public class BankBranchServiceImpl implements BankBranchService {
     @Override
     public List<BankServiceDTO> getBankServicesOfBranch(Long bankBranch_id) {
         BankBranch bankBranch = bankBranchRepository.findById(bankBranch_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Branch not found"));
-        Set<BankService> bankServices = bankBranch.getBankServices();
-        List<BankServiceDTO> bankServiceDTOs = new ArrayList<>();
-        for (BankService bankService : bankServices) {
-            bankServiceDTOs.add(bankServiceMapper.toDTO(bankService));
-        }
-        return bankServiceDTOs;
+        return bankBranch.getBankServices().stream()
+                .map(bankServiceMapper::toDTO)
+                .toList();
     }
 
     @Transactional
@@ -231,11 +227,9 @@ public class BankBranchServiceImpl implements BankBranchService {
     }
 
     private List<BankBranchDTO> getBankBranchDTOs(List<BankBranch> bankBranches) {
-        List<BankBranchDTO> bankBranchDTOs = new ArrayList<>();
-        for (BankBranch bankBranch : bankBranches) {
-            bankBranchDTOs.add(bankBranchMapper.toDTO(bankBranch));
-        }
-        return bankBranchDTOs;
+        return bankBranches.stream()
+                .map(bankBranchMapper::toDTO)
+                .toList();
     }
 
     private void enrichWithCoordinates(Location location) {

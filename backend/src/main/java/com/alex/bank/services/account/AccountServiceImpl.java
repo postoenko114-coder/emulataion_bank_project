@@ -22,7 +22,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -67,12 +66,9 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public List<AccountDTO> getListUserAccounts(Long user_id) {
         User user = userRepository.findById(user_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        List<Account> accounts = user.getAccounts();
-        List<AccountDTO> dtos = new ArrayList<>();
-        for (Account account : accounts) {
-            dtos.add(accountMapper.toDTO(account));
-        }
-        return dtos;
+        return user.getAccounts().stream()
+                .map(accountMapper::toDTO)
+                .toList();
     }
 
     @Transactional(readOnly = true)
